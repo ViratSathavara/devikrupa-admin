@@ -4,16 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { testimonialAPI, type Testimonial } from "@/lib/api";
 import { getApiErrorMessage, toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -22,24 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Star, Trash2 } from "lucide-react";
-
-type TestimonialForm = {
-  name: string;
-  role: string;
-  location: string;
-  rating: string;
-  message: string;
-};
-
-const DEFAULT_FORM: TestimonialForm = {
-  name: "",
-  role: "",
-  location: "",
-  rating: "5",
-  message: "",
-};
+import { RefreshCw, Star, Trash2 } from "lucide-react";
 
 const formatDate = (value: string): string =>
   new Date(value).toLocaleDateString("en-IN", {
@@ -48,12 +22,6 @@ const formatDate = (value: string): string =>
     year: "numeric",
   });
 
-const normalizeRating = (value: string): number => {
-  const parsed = Number.parseInt(value, 10);
-  if (Number.isNaN(parsed)) return 5;
-  return Math.max(1, Math.min(parsed, 5));
-};
-
 function RatingStars({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-1">
@@ -61,9 +29,7 @@ function RatingStars({ rating }: { rating: number }) {
         <Star
           key={index}
           className={`h-4 w-4 ${
-            index < rating
-              ? "fill-[#f6b939] text-[#f6b939]"
-              : "text-[#c8c0ba]"
+            index < rating ? "fill-[#f6b939] text-[#f6b939]" : "text-[#c8c0ba]"
           }`}
         />
       ))}
@@ -74,60 +40,34 @@ function RatingStars({ rating }: { rating: number }) {
 export default function TestimonialsPage() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState<TestimonialForm>(DEFAULT_FORM);
+  const [refreshing, setRefreshing] = useState(false);
 
   const totalCount = useMemo(() => testimonials.length, [testimonials]);
 
-  const loadTestimonials = async () => {
+  const loadTestimonials = async (silent = false) => {
+    if (silent) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
       const data = await testimonialAPI.getAll();
       setTestimonials(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to load testimonials", error);
     } finally {
-      setLoading(false);
+      if (silent) {
+        setRefreshing(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     loadTestimonials();
   }, []);
-
-  const resetForm = () => {
-    setForm(DEFAULT_FORM);
-    setDialogOpen(false);
-  };
-
-  const handleCreate = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!form.name.trim() || !form.message.trim()) {
-      toast.error("Name and message are required");
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      const created = await testimonialAPI.create({
-        name: form.name.trim(),
-        role: form.role.trim() || undefined,
-        location: form.location.trim() || undefined,
-        rating: normalizeRating(form.rating),
-        message: form.message.trim(),
-      });
-
-      setTestimonials((previous) => [created, ...previous]);
-      toast.success("Testimonial added");
-      resetForm();
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Failed to add testimonial"));
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this testimonial?")) {
@@ -151,7 +91,7 @@ export default function TestimonialsPage() {
         <div>
           <h1 className="text-3xl font-bold">Testimonials</h1>
           <p className="text-muted-foreground">
-            Manage landing page customer testimonials
+            Customer reviews from landing page (admin can only review and delete)
           </p>
         </div>
 
@@ -159,103 +99,14 @@ export default function TestimonialsPage() {
           <Badge className="border-[#4f83f0] bg-[#e7efff] text-[#1f56cc]">
             Total: {totalCount}
           </Badge>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto" onClick={() => setForm(DEFAULT_FORM)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Testimonial
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Add Testimonial</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Name *</Label>
-                    <Input
-                      value={form.name}
-                      onChange={(event) =>
-                        setForm((previous) => ({
-                          ...previous,
-                          name: event.target.value,
-                        }))
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Role</Label>
-                    <Input
-                      value={form.role}
-                      placeholder="Customer"
-                      onChange={(event) =>
-                        setForm((previous) => ({
-                          ...previous,
-                          role: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Location</Label>
-                    <Input
-                      value={form.location}
-                      onChange={(event) =>
-                        setForm((previous) => ({
-                          ...previous,
-                          location: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Rating (1 to 5)</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={5}
-                      value={form.rating}
-                      onChange={(event) =>
-                        setForm((previous) => ({
-                          ...previous,
-                          rating: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Message *</Label>
-                  <Textarea
-                    rows={5}
-                    value={form.message}
-                    onChange={(event) =>
-                      setForm((previous) => ({
-                        ...previous,
-                        message: event.target.value,
-                      }))
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={resetForm}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={submitting}>
-                    {submitting ? "Saving..." : "Save Testimonial"}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button
+            variant="outline"
+            onClick={() => loadTestimonials(true)}
+            disabled={refreshing}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
         </div>
       </div>
 
@@ -297,9 +148,7 @@ export default function TestimonialsPage() {
                   </div>
 
                   <RatingStars rating={testimonial.rating} />
-                  <p className="mt-3 text-sm text-[#5f5751]">
-                    {testimonial.message}
-                  </p>
+                  <p className="mt-3 text-sm text-[#5f5751]">{testimonial.message}</p>
                   <p className="mt-3 text-xs text-[#7a716a]">
                     Added: {formatDate(testimonial.createdAt)}
                   </p>

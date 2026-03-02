@@ -263,16 +263,6 @@ export const testimonialAPI = {
     const response = await api.get<Testimonial[]>("/testimonials");
     return response.data;
   },
-  create: async (data: {
-    name: string;
-    role?: string;
-    location?: string;
-    rating?: number;
-    message: string;
-  }) => {
-    const response = await api.post<Testimonial>("/testimonials", data);
-    return response.data;
-  },
   delete: async (id: string) => {
     const response = await api.delete(`/testimonials/${id}`);
     return response.data;
