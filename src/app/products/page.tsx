@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { productAPI, categoryAPI, uploadImage } from "@/lib/api";
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { getColorNameFromHex } from "@/lib/colorName";
 
@@ -54,8 +54,8 @@ export default function ProductsPage() {
       ]);
       setProducts(productsData);
       setCategories(categoriesData);
-    } catch {
-      toast.error("Failed to load data");
+    } catch (error) {
+      console.error("Failed to load products and categories", error);
     } finally {
       setLoading(false);
     }
@@ -625,4 +625,5 @@ export default function ProductsPage() {
     </div>
   );
 }
+
 

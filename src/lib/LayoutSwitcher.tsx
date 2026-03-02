@@ -1,13 +1,14 @@
 ﻿"use client";
 
 import Sidebar from "@/components/layouts/Sidebar";
-import { adminAuthAPI } from "./api";
+import { adminAuthAPI, pageSettingsAPI, PageConstructionSetting } from "./api";
 import { usePathname } from "next/navigation";
 import {
   Clock3,
   CircleUserRound,
   ChevronRight,
   Menu,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Tooltip,
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 function getTitleFromPath(pathname: string) {
   if (pathname === "/" || pathname === "/admin") {
@@ -61,6 +63,52 @@ function getStoredAdminDetails() {
   }
 }
 
+const normalizeAdminTogglePath = (pathname: string): string => {
+  const effectivePath = pathname === "/" ? "/login" : pathname;
+  if (effectivePath.startsWith("/_admin")) {
+    return effectivePath;
+  }
+  return `/_admin${effectivePath}`;
+};
+
+function AdminUnderConstructionScreen({
+  pageStatus,
+}: {
+  pageStatus: PageConstructionSetting;
+}) {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[var(--shell-bg)] px-4 py-12">
+      <div className="w-full max-w-xl rounded-3xl border bg-[var(--card)] p-8 text-center shadow-[0_18px_56px_rgba(21,21,21,0.12)]">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+          <AlertTriangle className="h-7 w-7" />
+        </div>
+
+        <h1 className="text-2xl font-semibold">Admin Page Under Construction</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {pageStatus.message ||
+            "This admin screen is temporarily unavailable while updates are in progress."}
+        </p>
+
+        <p className="mt-5 text-xs text-muted-foreground">
+          Path:{" "}
+          <span className="font-medium text-foreground">
+            {pageStatus.path.replace("/_admin", "") || "/"}
+          </span>
+        </p>
+
+        <div className="mt-6">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+          >
+            Go to Dashboard
+          </Link>
+        </div>
+      </div>
+    </main>
+  );
+}
+
 export default function LayoutSwitcher({
   children,
 }: {
@@ -72,7 +120,14 @@ export default function LayoutSwitcher({
   const [clock, setClock] = useState<string>(getTimeString());
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
-  const { adminName, adminRole } = useMemo(() => getStoredAdminDetails(), []);
+  const [pageStatus, setPageStatus] = useState<PageConstructionSetting | null>(
+    null
+  );
+  const [isCheckingPageStatus, setIsCheckingPageStatus] = useState(true);
+  const { name: adminName, role: adminRole } = useMemo(
+    () => getStoredAdminDetails(),
+    []
+  );
 
   const pageTitle = getTitleFromPath(pathname);
 
@@ -82,10 +137,49 @@ export default function LayoutSwitcher({
     return () => clearInterval(intervalId);
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    let isActive = true;
+    const settingPath = normalizeAdminTogglePath(pathname);
+
+    const checkAdminPage = async () => {
+      try {
+        setIsCheckingPageStatus(true);
+        const setting = await pageSettingsAPI.check(settingPath, `Admin: ${pageTitle}`);
+        if (!isActive) {
+          return;
+        }
+        setPageStatus(setting);
+      } catch {
+        if (!isActive) {
+          return;
+        }
+        setPageStatus(null);
+      } finally {
+        if (isActive) {
+          setIsCheckingPageStatus(false);
+        }
+      }
+    };
+
+    checkAdminPage();
+
+    return () => {
+      isActive = false;
+    };
+  }, [pathname, pageTitle]);
+
   const initial = useMemo(
     () => adminName?.trim()?.charAt(0)?.toUpperCase() || "A",
     [adminName],
   );
+
+  if (isCheckingPageStatus) {
+    return null;
+  }
+
+  if (pageStatus?.isUnderConstruction) {
+    return <AdminUnderConstructionScreen pageStatus={pageStatus} />;
+  }
 
   if (isAuthenticated) {
     return (

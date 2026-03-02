@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { adminAPI } from "@/lib/api";
 import {
   Dialog,
@@ -77,8 +77,8 @@ const AdminPage = () => {
     try {
       const data = await adminAPI.getAll();
       setAdmins(data);
-    } catch {
-      toast.error("Failed to load admins");
+    } catch (error) {
+      console.error("Failed to load admins", error);
     } finally {
       setLoading(false);
     }
@@ -140,8 +140,8 @@ const AdminPage = () => {
       setForm({ ...admin, password: "" });
       setEditId(id);
       setIsOpen(true);
-    } catch {
-      toast.error("Failed to load admin");
+    } catch (error) {
+      console.error("Failed to load admin", error);
     }
   };
 
@@ -335,3 +335,4 @@ const AdminPage = () => {
 };
 
 export default AdminPage;
+

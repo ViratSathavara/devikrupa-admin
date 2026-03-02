@@ -1,9 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { inquiryAPI, adminAuthAPI } from "@/lib/api";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -72,8 +71,8 @@ export default function InquiriesPage() {
     try {
       const data = await inquiryAPI.getAll();
       setInquiries(Array.isArray(data) ? data : []);
-    } catch {
-      toast.error("Failed to load inquiries");
+    } catch (error) {
+      console.error("Failed to load inquiries", error);
     } finally {
       if (!silent) setLoading(false);
       if (silent) setRefreshing(false);
@@ -202,3 +201,4 @@ export default function InquiriesPage() {
     </div>
   );
 }
+

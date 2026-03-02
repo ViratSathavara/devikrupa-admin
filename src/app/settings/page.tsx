@@ -6,6 +6,7 @@ import {
   ShieldCheck,
   Settings,
   Sliders,
+  Star,
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -39,10 +40,16 @@ export default function SettingsPage() {
 
         <SettingsCard
           title="System Settings"
-          description="Application level configuration"
+          description="Page visibility and under-construction controls"
           href="/settings/system"
           icon={<Sliders className="w-6 h-6" />}
-          disabled
+        />
+
+        <SettingsCard
+          title="Testimonials"
+          description="Add and remove landing page testimonials"
+          href="/testimonials"
+          icon={<Star className="w-6 h-6" />}
         />
 
         {/* Future Ready */}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { categoryAPI } from "@/lib/api";
@@ -29,7 +29,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Plus, Edit, Trash2 } from "lucide-react";
 
 type CategoryForm = {
@@ -60,8 +60,8 @@ export default function CategoriesPage() {
         try {
             const data = await categoryAPI.getAll();
             setCategories(data);
-        } catch {
-            toast.error("Failed to load categories");
+        } catch (error) {
+            console.error("Failed to load categories", error);
         } finally {
             setLoading(false);
         }
@@ -317,3 +317,4 @@ export default function CategoriesPage() {
         </div>
     );
 }
+

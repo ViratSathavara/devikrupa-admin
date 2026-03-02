@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -84,3 +84,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

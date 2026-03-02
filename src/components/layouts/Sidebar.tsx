@@ -12,6 +12,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -61,6 +62,11 @@ export default function Sidebar({
       href: "/inquiries",
       icon: <ClipboardList className="h-4 w-4" />,
       label: "My Inquiries",
+    },
+    {
+      href: "/testimonials",
+      icon: <Star className="h-4 w-4" />,
+      label: "Testimonials",
     },
     {
       href: "/settings",

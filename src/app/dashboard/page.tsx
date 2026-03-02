@@ -1,8 +1,7 @@
-"use client";
+﻿"use client";
 
 import { deshboardAPI } from "@/lib/api";
 import React, { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { Package, Layers, Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -36,8 +35,8 @@ const Page = () => {
     try {
       const data = await deshboardAPI.getAllCards();
       setDashboardCards(data);
-    } catch {
-      toast.error("Failed to load dashboard cards");
+    } catch (error) {
+      console.error("Failed to load dashboard cards", error);
     } finally {
       setLoading(false);
     }
@@ -74,3 +73,4 @@ const Page = () => {
 };
 
 export default Page;
+
