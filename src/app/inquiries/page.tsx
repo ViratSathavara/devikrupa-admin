@@ -1,10 +1,12 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { inquiryAPI, adminAuthAPI } from "@/lib/api";
-import { Button } from "@/components/ui/button";
+import { Inbox, RefreshCw } from "lucide-react";
+
+import { adminAuthAPI, inquiryAPI } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -13,7 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RefreshCw } from "lucide-react";
+import {
+  AdminEmptyState,
+  AdminLoadingState,
+  AdminPage,
+  AdminPageHeader,
+  AdminPanel,
+} from "@/components/layouts/AdminPageShell";
 
 type InquiryItem = {
   id: string;
@@ -46,11 +54,9 @@ function getStatusBadge(status?: string) {
   if (normalized === "RESOLVED" || normalized === "COMPLETED") {
     return <Badge className="border-[#1c6c46] bg-[#def4e7] text-[#1c6c46]">{normalized}</Badge>;
   }
-
   if (normalized === "REJECTED" || normalized === "CANCELLED") {
     return <Badge className="border-[#b42318] bg-[#fdecea] text-[#b42318]">{normalized}</Badge>;
   }
-
   if (normalized === "IN_PROGRESS" || normalized === "CONTACTED") {
     return <Badge className="border-[#7c5a0b] bg-[#fff3d6] text-[#7c5a0b]">{normalized}</Badge>;
   }
@@ -84,77 +90,82 @@ export default function InquiriesPage() {
       router.replace("/login");
       return;
     }
-
     loadData();
   }, [router]);
 
   const totalCount = useMemo(() => inquiries.length, [inquiries]);
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Inquiries</h1>
-          <p className="text-muted-foreground">Track customer inquiries and messages</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Badge className="border-[#4f83f0] bg-[#e7efff] text-[#1f56cc]">Total: {totalCount}</Badge>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => loadData(true)}
-            disabled={refreshing}
-            className="w-full sm:w-auto"
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-        </div>
-      </div>
+    <AdminPage>
+      <AdminPageHeader
+        title="Inquiries"
+        description="Track and review customer inquiries from the website."
+        actions={
+          <>
+            <Badge className="border-[#4f83f0] bg-[#e7efff] text-[#1f56cc]">
+              Total: {totalCount}
+            </Badge>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => loadData(true)}
+              disabled={refreshing}
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+          </>
+        }
+      />
 
       {loading ? (
-        <div className="py-12 text-center text-sm text-muted-foreground">Loading inquiries...</div>
+        <AdminLoadingState label="Loading inquiries..." />
+      ) : inquiries.length === 0 ? (
+        <AdminEmptyState
+          title="No inquiries found"
+          description="New customer messages will appear here."
+          icon={Inbox}
+        />
       ) : (
-        <>
+        <AdminPanel className="space-y-3">
           <div className="space-y-3 md:hidden">
-            {inquiries.length === 0 ? (
-              <div className="rounded-2xl border border-[#ded8d2] bg-[#f9f7f5] p-6 text-center text-sm text-[#6f6761]">
-                No inquiries found
-              </div>
-            ) : (
-              inquiries.map((inquiry) => (
-                <div
-                  key={inquiry.id}
-                  className="rounded-2xl border border-[#ded8d2] bg-[#f9f7f5] p-4 shadow-[0_6px_20px_rgba(31,27,24,0.08)]"
-                >
-                  <div className="mb-3 flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-base font-semibold text-[#2f2b29]">{inquiry.name || "Unknown"}</p>
-                      <p className="text-sm text-[#736a64]">{inquiry.email || inquiry.phone || "-"}</p>
-                    </div>
-                    {getStatusBadge(inquiry.status)}
+            {inquiries.map((inquiry) => (
+              <div
+                key={inquiry.id}
+                className="rounded-xl border border-[var(--shell-border)] bg-[var(--surface-elevated)] p-4"
+              >
+                <div className="mb-3 flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-base font-semibold text-foreground">
+                      {inquiry.name || "Unknown"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {inquiry.email || inquiry.phone || "-"}
+                    </p>
                   </div>
+                  {getStatusBadge(inquiry.status)}
+                </div>
 
-                  <p className="line-clamp-3 text-sm text-[#5f5751]">{inquiry.message || "No message"}</p>
+                <p className="line-clamp-3 text-sm text-muted-foreground">
+                  {inquiry.message || "No message"}
+                </p>
 
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs uppercase tracking-wide text-[#7a716a]">
-                    <div className="rounded-lg border border-[#e6e0db] bg-white/55 p-2">
-                      Product
-                      <p className="mt-1 text-sm font-medium normal-case text-[#2f2b29]">
-                        {inquiry.product?.name || inquiry.productName || "-"}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border border-[#e6e0db] bg-white/55 p-2">
-                      Date
-                      <p className="mt-1 text-sm font-medium normal-case text-[#2f2b29]">
-                        {formatDate(inquiry.createdAt)}
-                      </p>
-                    </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+                  <div className="rounded-lg border border-[var(--shell-border)] bg-card p-2">
+                    Product
+                    <p className="mt-1 text-sm font-medium normal-case text-foreground">
+                      {inquiry.product?.name || inquiry.productName || "-"}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[var(--shell-border)] bg-card p-2">
+                    Date
+                    <p className="mt-1 text-sm font-medium normal-case text-foreground">
+                      {formatDate(inquiry.createdAt)}
+                    </p>
                   </div>
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
 
           <div className="hidden md:block">
@@ -170,35 +181,28 @@ export default function InquiriesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {inquiries.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-[#6f6761]">
-                      No inquiries found
+                {inquiries.map((inquiry) => (
+                  <TableRow key={inquiry.id}>
+                    <TableCell className="font-medium">{inquiry.name || "Unknown"}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <div>{inquiry.email || "-"}</div>
+                      <div className="text-xs text-muted-foreground">{inquiry.phone || "-"}</div>
                     </TableCell>
+                    <TableCell>{inquiry.product?.name || inquiry.productName || "-"}</TableCell>
+                    <TableCell className="max-w-[320px]">
+                      <p className="line-clamp-2 text-muted-foreground">
+                        {inquiry.message || "No message"}
+                      </p>
+                    </TableCell>
+                    <TableCell>{getStatusBadge(inquiry.status)}</TableCell>
+                    <TableCell>{formatDate(inquiry.createdAt)}</TableCell>
                   </TableRow>
-                ) : (
-                  inquiries.map((inquiry) => (
-                    <TableRow key={inquiry.id}>
-                      <TableCell className="font-medium">{inquiry.name || "Unknown"}</TableCell>
-                      <TableCell className="text-[#6d655f]">
-                        <div>{inquiry.email || "-"}</div>
-                        <div className="text-xs text-[#8a817b]">{inquiry.phone || "-"}</div>
-                      </TableCell>
-                      <TableCell>{inquiry.product?.name || inquiry.productName || "-"}</TableCell>
-                      <TableCell className="max-w-[320px]">
-                        <p className="line-clamp-2 text-[#5f5751]">{inquiry.message || "No message"}</p>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(inquiry.status)}</TableCell>
-                      <TableCell>{formatDate(inquiry.createdAt)}</TableCell>
-                    </TableRow>
-                  ))
-                )}
+                ))}
               </TableBody>
             </Table>
           </div>
-        </>
+        </AdminPanel>
       )}
-    </div>
+    </AdminPage>
   );
 }
-

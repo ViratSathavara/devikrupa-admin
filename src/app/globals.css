@@ -38,6 +38,9 @@
   --shell-bg: #e9e5e0;
   --shell-card: #f5f3f0;
   --shell-border: #d8d2cc;
+  --surface-elevated: #f9f7f4;
+  --surface-soft: #f2ede7;
+  --shell-glow: rgba(34, 102, 72, 0.16);
   --bg: var(--background);
   --text: var(--foreground);
   --bgdark: #171a19;
@@ -77,6 +80,9 @@
   --shell-bg: #202422;
   --shell-card: #262c29;
   --shell-border: #3a423e;
+  --surface-elevated: #2b312e;
+  --surface-soft: #252b28;
+  --shell-glow: rgba(77, 173, 128, 0.2);
 }
 
 @theme inline {
@@ -116,7 +122,10 @@
 
 body {
   min-height: 100vh;
-  background: var(--background);
+  background:
+    radial-gradient(1200px 560px at -10% -20%, color-mix(in srgb, var(--shell-glow) 52%, transparent), transparent 62%),
+    radial-gradient(980px 500px at 118% 0%, color-mix(in srgb, var(--shell-glow) 38%, transparent), transparent 60%),
+    linear-gradient(180deg, color-mix(in srgb, var(--background) 92%, #ffffff 8%), var(--background));
   color: var(--foreground);
   font-feature-settings: "rlig" 1, "calt" 1;
 }
@@ -125,4 +134,19 @@ body {
   border: 1px solid var(--shell-border);
   background: var(--shell-card);
   box-shadow: 0 10px 28px rgba(24, 20, 18, 0.1);
+}
+
+.page-enter {
+  animation: page-enter 320ms ease-out;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

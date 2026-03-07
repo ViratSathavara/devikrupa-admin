@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { RefreshCw, Save } from "lucide-react";
+import { Construction, RefreshCw, Save } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,12 @@ import {
   PageConstructionSetting,
   pageSettingsAPI,
 } from "@/lib/api";
+import {
+  AdminEmptyState,
+  AdminLoadingState,
+  AdminPage,
+  AdminPageHeader,
+} from "@/components/layouts/AdminPageShell";
 
 type SettingGroupKey = "web-pages" | "landing-sections" | "admin-pages" | "other";
 
@@ -213,42 +219,42 @@ export default function SystemSettingsPage() {
 
   if (loading) {
     return (
-      <div className="p-4 md:p-6">
-        <p className="text-sm text-muted-foreground">Loading system settings...</p>
-      </div>
+      <AdminPage>
+        <AdminLoadingState label="Loading system settings..." />
+      </AdminPage>
     );
   }
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Page Construction Control</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Toggle any page to show an under-construction screen. Each path is managed independently.
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Live: {statusSummary.liveCount} | Under Construction: {statusSummary.underConstructionCount}
-          </p>
+    <AdminPage>
+      <AdminPageHeader
+        title="Page Construction Control"
+        description="Toggle any route to show an under-construction screen. Each path is managed independently."
+        actions={
+          <Button variant="outline" onClick={() => loadSettings(true)} disabled={refreshing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            Refresh Paths
+          </Button>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge className="border-[#0e5f39] bg-[#dbf6e8] text-[#0e5f39]">
+            Live: {statusSummary.liveCount}
+          </Badge>
+          <Badge className="border-[#8b5e1f] bg-[#fff4dc] text-[#8b5e1f]">
+            Under Construction: {statusSummary.underConstructionCount}
+          </Badge>
         </div>
+      </AdminPageHeader>
 
-        <Button
-          variant="outline"
-          onClick={() => loadSettings(true)}
-          disabled={refreshing}
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-          Refresh Paths
-        </Button>
-      </div>
-
-      {!hasSettings && (
-        <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-          No pages discovered yet.
-        </div>
-      )}
-
-      <div className="space-y-8">
+      {!hasSettings ? (
+        <AdminEmptyState
+          title="No pages discovered yet"
+          description="Routes will appear here once they are registered by the backend."
+          icon={Construction}
+        />
+      ) : (
+        <div className="space-y-8">
         {(Object.keys(GROUP_METADATA) as SettingGroupKey[]).map((groupKey) => {
           const items = groupedSettings[groupKey];
           if (items.length === 0) {
@@ -276,7 +282,7 @@ export default function SystemSettingsPage() {
                   return (
                     <div
                       key={setting.id}
-                      className="rounded-2xl border bg-[var(--card)] p-4 md:p-5"
+                      className="rounded-2xl border border-[var(--shell-border)] bg-[var(--surface-elevated)] p-4 shadow-[0_8px_18px_rgba(21,19,17,0.06)] md:p-5"
                     >
                       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div className="space-y-1">
@@ -338,8 +344,9 @@ export default function SystemSettingsPage() {
             </section>
           );
         })}
-      </div>
-    </div>
+        </div>
+      )}
+    </AdminPage>
   );
 }
 

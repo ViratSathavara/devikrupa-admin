@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { MessageSquareQuote, RefreshCw, Star, Trash2 } from "lucide-react";
+
 import { testimonialAPI, type Testimonial } from "@/lib/api";
 import { getApiErrorMessage, toast } from "@/lib/toast";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -13,7 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RefreshCw, Star, Trash2 } from "lucide-react";
+import {
+  AdminEmptyState,
+  AdminLoadingState,
+  AdminPage,
+  AdminPageHeader,
+  AdminPanel,
+} from "@/components/layouts/AdminPageShell";
 
 const formatDate = (value: string): string =>
   new Date(value).toLocaleDateString("en-IN", {
@@ -70,14 +78,12 @@ export default function TestimonialsPage() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this testimonial?")) {
-      return;
-    }
+    if (!confirm("Delete this testimonial?")) return;
 
     try {
       await testimonialAPI.delete(id);
       setTestimonials((previous) =>
-        previous.filter((testimonial) => testimonial.id !== id)
+        previous.filter((testimonial) => testimonial.id !== id),
       );
       toast.success("Testimonial deleted");
     } catch (error) {
@@ -86,75 +92,64 @@ export default function TestimonialsPage() {
   };
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Testimonials</h1>
-          <p className="text-muted-foreground">
-            Customer reviews from landing page (admin can only review and delete)
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Badge className="border-[#4f83f0] bg-[#e7efff] text-[#1f56cc]">
-            Total: {totalCount}
-          </Badge>
-          <Button
-            variant="outline"
-            onClick={() => loadTestimonials(true)}
-            disabled={refreshing}
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-        </div>
-      </div>
+    <AdminPage>
+      <AdminPageHeader
+        title="Testimonials"
+        description="Review and moderate testimonials shown on the website."
+        actions={
+          <>
+            <Badge className="border-[#4f83f0] bg-[#e7efff] text-[#1f56cc]">
+              Total: {totalCount}
+            </Badge>
+            <Button variant="outline" onClick={() => loadTestimonials(true)} disabled={refreshing}>
+              <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+          </>
+        }
+      />
 
       {loading ? (
-        <div className="py-12 text-center text-sm text-muted-foreground">
-          Loading testimonials...
-        </div>
+        <AdminLoadingState label="Loading testimonials..." />
+      ) : testimonials.length === 0 ? (
+        <AdminEmptyState
+          title="No testimonials found"
+          description="Customer reviews will appear here once submitted."
+          icon={MessageSquareQuote}
+        />
       ) : (
-        <>
+        <AdminPanel className="space-y-3">
           <div className="space-y-3 md:hidden">
-            {testimonials.length === 0 ? (
-              <div className="rounded-2xl border border-[#ded8d2] bg-[#f9f7f5] p-6 text-center text-sm text-[#6f6761]">
-                No testimonials found
-              </div>
-            ) : (
-              testimonials.map((testimonial) => (
-                <div
-                  key={testimonial.id}
-                  className="rounded-2xl border border-[#ded8d2] bg-[#f9f7f5] p-4 shadow-[0_6px_20px_rgba(31,27,24,0.08)]"
-                >
-                  <div className="mb-2 flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-base font-semibold text-[#2f2b29]">
-                        {testimonial.name}
-                      </p>
-                      <p className="text-sm text-[#736a64]">
-                        {testimonial.role || "Customer"}
-                        {testimonial.location ? ` | ${testimonial.location}` : ""}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleDelete(testimonial.id)}
-                    >
-                      <Trash2 className="mr-1.5 h-4 w-4" />
-                      Delete
-                    </Button>
+            {testimonials.map((testimonial) => (
+              <div
+                key={testimonial.id}
+                className="rounded-xl border border-[var(--shell-border)] bg-[var(--surface-elevated)] p-4"
+              >
+                <div className="mb-2 flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-base font-semibold text-foreground">{testimonial.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {testimonial.role || "Customer"}
+                      {testimonial.location ? ` | ${testimonial.location}` : ""}
+                    </p>
                   </div>
-
-                  <RatingStars rating={testimonial.rating} />
-                  <p className="mt-3 text-sm text-[#5f5751]">{testimonial.message}</p>
-                  <p className="mt-3 text-xs text-[#7a716a]">
-                    Added: {formatDate(testimonial.createdAt)}
-                  </p>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleDelete(testimonial.id)}
+                  >
+                    <Trash2 className="mr-1.5 h-4 w-4" />
+                    Delete
+                  </Button>
                 </div>
-              ))
-            )}
+
+                <RatingStars rating={testimonial.rating} />
+                <p className="mt-3 text-sm text-muted-foreground">{testimonial.message}</p>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Added: {formatDate(testimonial.createdAt)}
+                </p>
+              </div>
+            ))}
           </div>
 
           <div className="hidden md:block">
@@ -170,45 +165,37 @@ export default function TestimonialsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {testimonials.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-[#6f6761]">
-                      No testimonials found
+                {testimonials.map((testimonial) => (
+                  <TableRow key={testimonial.id}>
+                    <TableCell className="font-medium">{testimonial.name}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {testimonial.role || "Customer"}
+                      {testimonial.location ? ` | ${testimonial.location}` : ""}
+                    </TableCell>
+                    <TableCell>
+                      <RatingStars rating={testimonial.rating} />
+                    </TableCell>
+                    <TableCell className="max-w-[360px]">
+                      <p className="line-clamp-2 text-muted-foreground">{testimonial.message}</p>
+                    </TableCell>
+                    <TableCell>{formatDate(testimonial.createdAt)}</TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(testimonial.id)}
+                      >
+                        <Trash2 className="mr-1.5 h-4 w-4" />
+                        Delete
+                      </Button>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  testimonials.map((testimonial) => (
-                    <TableRow key={testimonial.id}>
-                      <TableCell className="font-medium">{testimonial.name}</TableCell>
-                      <TableCell className="text-[#6d655f]">
-                        {testimonial.role || "Customer"}
-                        {testimonial.location ? ` | ${testimonial.location}` : ""}
-                      </TableCell>
-                      <TableCell>
-                        <RatingStars rating={testimonial.rating} />
-                      </TableCell>
-                      <TableCell className="max-w-[360px]">
-                        <p className="line-clamp-2 text-[#5f5751]">{testimonial.message}</p>
-                      </TableCell>
-                      <TableCell>{formatDate(testimonial.createdAt)}</TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(testimonial.id)}
-                        >
-                          <Trash2 className="mr-1.5 h-4 w-4" />
-                          Delete
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
+                ))}
               </TableBody>
             </Table>
           </div>
-        </>
+        </AdminPanel>
       )}
-    </div>
+    </AdminPage>
   );
 }

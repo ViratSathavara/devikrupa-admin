@@ -1,132 +1,129 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
-  Users,
-  ShieldCheck,
+  Languages,
   Settings,
+  ShieldCheck,
   Sliders,
   Star,
+  Users,
 } from "lucide-react";
 
-export default function SettingsPage() {
-  return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage system configuration and admin controls
-        </p>
-      </div>
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import {
+  AdminPage,
+  AdminPageHeader,
+  AdminPanel,
+} from "@/components/layouts/AdminPageShell";
 
-      {/* Settings Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-
-        <SettingsCard
-          title="Admin Users"
-          description="Create, update and manage admin roles"
-          href="/settings/admin-users"
-          icon={<Users className="w-6 h-6" />}
-        />
-
-        <SettingsCard
-          title="Security"
-          description="Passwords, sessions and access control"
-          href="/settings/security"
-          icon={<ShieldCheck className="w-6 h-6" />}
-          disabled
-        />
-
-        <SettingsCard
-          title="System Settings"
-          description="Page visibility and under-construction controls"
-          href="/settings/system"
-          icon={<Sliders className="w-6 h-6" />}
-        />
-
-        <SettingsCard
-          title="Testimonials"
-          description="Add and remove landing page testimonials"
-          href="/testimonials"
-          icon={<Star className="w-6 h-6" />}
-        />
-
-        {/* Future Ready */}
-        <SettingsCard
-          title="General"
-          description="Branding, preferences and defaults"
-          href="/settings/general"
-          icon={<Settings className="w-6 h-6" />}
-          disabled
-        />
-
-      </div>
-    </div>
-  );
-}
-
-/* =================================
-   Settings Card Component
-================================= */
-function SettingsCard({
-  title,
-  description,
-  href,
-  icon,
-  disabled = false,
-}: {
+type SettingsCardConfig = {
   title: string;
   description: string;
   href: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   disabled?: boolean;
-}) {
-  if (disabled) {
-    return (
-      <div className="rounded-xl border border-dashed border-[var(--border)] p-6 opacity-50 cursor-not-allowed">
-        <div className="flex items-center gap-4">
-          <div className="rounded-lg bg-muted p-3">{icon}</div>
-          <div>
-            <h3 className="font-medium">{title}</h3>
-            <p className="text-sm text-muted-foreground">{description}</p>
+  badge?: string;
+};
+
+const settingsCards: SettingsCardConfig[] = [
+  {
+    title: "Admin Users",
+    description: "Create, update, and manage admin roles and access.",
+    href: "/settings/admin-users",
+    icon: <Users className="h-5 w-5" />,
+    badge: "Core",
+  },
+  {
+    title: "System Settings",
+    description: "Control page visibility and under-construction modes.",
+    href: "/settings/system",
+    icon: <Sliders className="h-5 w-5" />,
+    badge: "Core",
+  },
+  {
+    title: "Language Manager",
+    description: "Manage dictionary, phrases, translation rules, and learning.",
+    href: "/settings/language",
+    icon: <Languages className="h-5 w-5" />,
+  },
+  {
+    title: "Testimonials",
+    description: "Review and remove public customer testimonials.",
+    href: "/testimonials",
+    icon: <Star className="h-5 w-5" />,
+  },
+  {
+    title: "Security",
+    description: "Passwords, sessions, and access policies.",
+    href: "/settings/security",
+    icon: <ShieldCheck className="h-5 w-5" />,
+    disabled: true,
+    badge: "Soon",
+  },
+  {
+    title: "General",
+    description: "Branding preferences and app defaults.",
+    href: "/settings/general",
+    icon: <Settings className="h-5 w-5" />,
+    disabled: true,
+    badge: "Soon",
+  },
+];
+
+export default function SettingsPage() {
+  return (
+    <AdminPage>
+      <AdminPageHeader
+        title="Settings"
+        description="Manage system configuration and admin controls."
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {settingsCards.map((card) => (
+          <SettingsCard key={card.title} card={card} />
+        ))}
+      </div>
+    </AdminPage>
+  );
+}
+
+function SettingsCard({ card }: { card: SettingsCardConfig }) {
+  const content = (
+    <AdminPanel
+      className={cn(
+        "h-full p-0 transition-transform duration-200",
+        card.disabled
+          ? "cursor-not-allowed opacity-60"
+          : "hover:-translate-y-0.5 hover:border-primary/40",
+      )}
+    >
+      <div className="flex h-full flex-col gap-4 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            {card.icon}
           </div>
+          {card.badge ? (
+            <Badge variant={card.disabled ? "outline" : "secondary"}>{card.badge}</Badge>
+          ) : null}
+        </div>
+        <div>
+          <h3 className="text-base font-semibold text-foreground">{card.title}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{card.description}</p>
         </div>
       </div>
-    );
+    </AdminPanel>
+  );
+
+  if (card.disabled) {
+    return content;
   }
 
   return (
-    <Link
-      href={href}
-      className="
-        group rounded-xl border border-[var(--border)]
-        bg-[var(--card)] p-6 transition-all
-        hover:border-[var(--primary)]
-        hover:shadow-md
-      "
-    >
-      <div className="flex items-center gap-4">
-        <div
-          className="
-            rounded-lg p-3
-            bg-[var(--primary)]/10
-            text-[var(--primary)]
-            group-hover:bg-[var(--primary)]
-            group-hover:text-white
-            transition
-          "
-        >
-          {icon}
-        </div>
-
-        <div>
-          <h3 className="font-medium">{title}</h3>
-          <p className="text-sm text-muted-foreground">
-            {description}
-          </p>
-        </div>
-      </div>
+    <Link href={card.href} className="block">
+      {content}
     </Link>
   );
 }

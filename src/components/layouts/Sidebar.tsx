@@ -13,9 +13,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Star,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import logo from "../../../public/logo-new-light.png";
@@ -34,12 +34,14 @@ export default function Sidebar({
   setMobileOpen,
 }: SidebarProps) {
   const { logout, admin } = useAdminAuth();
-  const [hoveredPath, setHoveredPath] = useState<string | null>(null);
   const pathname = usePathname();
 
   const isActive = (path: string) => {
-    if (hoveredPath && hoveredPath !== path) return false;
-    return pathname === path;
+    if (path === "/dashboard") {
+      return pathname === "/dashboard";
+    }
+
+    return pathname === path || pathname.startsWith(`${path}/`);
   };
 
   const items = [
@@ -62,6 +64,11 @@ export default function Sidebar({
       href: "/inquiries",
       icon: <ClipboardList className="h-4 w-4" />,
       label: "My Inquiries",
+    },
+    {
+      href: "/chats",
+      icon: <MessageCircle className="h-4 w-4" />,
+      label: "Live Chats",
     },
     {
       href: "/testimonials",
@@ -134,7 +141,6 @@ export default function Sidebar({
                   icon={item.icon}
                   label={item.label}
                   active={isActive(item.href)}
-                  onHover={setHoveredPath}
                   onNavigate={() => setMobileOpen(false)}
                 />
               ))}
@@ -162,21 +168,17 @@ function SidebarItem({
   icon,
   label,
   active,
-  onHover,
   onNavigate,
 }: {
   href: string;
   icon: React.ReactNode;
   label: string;
   active: boolean;
-  onHover: (path: string | null) => void;
   onNavigate: () => void;
 }) {
   return (
     <Link
       href={href}
-      onMouseEnter={() => onHover(href)}
-      onMouseLeave={() => onHover(null)}
       onClick={onNavigate}
       className={`
           flex items-center justify-between gap-3

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
 
 function getTitleFromPath(pathname: string) {
@@ -138,6 +139,10 @@ export default function LayoutSwitcher({
   }, [isAuthenticated]);
 
   useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
     let isActive = true;
     const settingPath = normalizeAdminTogglePath(pathname);
 
@@ -174,7 +179,14 @@ export default function LayoutSwitcher({
   );
 
   if (isCheckingPageStatus) {
-    return null;
+    return (
+      <main className="flex min-h-screen items-center justify-center">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--shell-border)] bg-[var(--card)] px-4 py-2 text-sm text-muted-foreground">
+          <Spinner className="h-4 w-4" />
+          Loading page...
+        </div>
+      </main>
+    );
   }
 
   if (pageStatus?.isUnderConstruction) {
@@ -183,7 +195,7 @@ export default function LayoutSwitcher({
 
   if (isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[var(--shell-bg)] text-foreground">
+      <div className="min-h-screen text-foreground page-enter">
         <Sidebar
           desktopOpen={desktopSidebarOpen}
           onDesktopToggle={() => setDesktopSidebarOpen((prev) => !prev)}
@@ -196,8 +208,8 @@ export default function LayoutSwitcher({
             desktopSidebarOpen ? "md:ml-[282px]" : "md:ml-0"
           }`}
         >
-          <div className="flex min-h-[calc(100vh-0.5rem)] flex-col rounded-[24px] border border-[var(--shell-border)] bg-[var(--shell-bg)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] md:min-h-[calc(100vh-2rem)] md:p-4">
-            <header className="mb-4 flex min-h-[68px] flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[var(--shell-border)] bg-[var(--shell-card)] px-3 py-2 md:px-4">
+          <div className="flex min-h-[calc(100vh-0.5rem)] flex-col rounded-[24px] border border-[var(--shell-border)] bg-[var(--surface-soft)]/75 p-3 shadow-[0_18px_40px_rgba(22,20,18,0.08)] md:min-h-[calc(100vh-2rem)] md:p-4">
+            <header className="mb-4 flex min-h-[68px] flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[var(--shell-border)] bg-[var(--surface-elevated)]/95 px-3 py-2 shadow-[0_8px_16px_rgba(22,20,18,0.06)] md:px-4">
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
@@ -218,7 +230,7 @@ export default function LayoutSwitcher({
                     <ChevronRight className="h-5 w-5" />
                   </Button>
                 )}
-                <h2 className="text-base font-semibold text-foreground md:text-lg">
+                <h2 className="text-base font-semibold tracking-tight text-foreground md:text-lg">
                   {pageTitle}
                 </h2>
               </div>
@@ -254,7 +266,7 @@ export default function LayoutSwitcher({
               </div>
             </header>
 
-            <section className="flex-1 overflow-hidden rounded-[18px] border border-[var(--shell-border)] bg-card">
+            <section className="flex-1 overflow-hidden rounded-[18px] border border-[var(--shell-border)] bg-[var(--surface-elevated)]/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]">
               <div className="h-full overflow-auto">{children}</div>
             </section>
           </div>
@@ -263,5 +275,5 @@ export default function LayoutSwitcher({
     );
   }
 
-  return <main>{children}</main>;
+  return <main className="page-enter">{children}</main>;
 }

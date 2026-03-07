@@ -1,23 +1,24 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Users2 } from "lucide-react";
+import {
+  AdminEmptyState,
+  AdminPage,
+  AdminPageHeader,
+} from "@/components/layouts/AdminPageShell";
 
 export default function UsersPage() {
   return (
-    <div className="p-4 md:p-6">
-      <Card className="mx-auto max-w-2xl">
-        <CardHeader>
-          <CardTitle>Users</CardTitle>
-          <CardDescription>
-            This screen is ready for user management modules.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Add your user list and controls here.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+    <AdminPage>
+      <AdminPageHeader
+        title="Users"
+        description="This module is ready for customer or internal user management."
+      />
+      <AdminEmptyState
+        title="User management is not configured yet"
+        description="Connect your user API and controls to manage permissions, status, and access."
+        icon={Users2}
+      />
+    </AdminPage>
   );
 }
